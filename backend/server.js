@@ -17,7 +17,7 @@ app.use(cors());
 app.use(express.json());
 
 // Hardcode your OpenAI API Key
-const openai = new OpenAI({ apiKey: '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' });
+const openai = new OpenAI({ apiKey: 'paste-API-key-here' });
 
 // Function to analyze speech using ChatGPT
 const analyzeSpeech = async (speechText, summaryText) => {
