@@ -9,6 +9,7 @@ function WorkingPage() {
   const [speechSpeed, setSpeechSpeed] = useState(0); // Words per minute
   const [speechVolume, setSpeechVolume] = useState(0); // Volume level (in decibels)
   const [feedback, setFeedback] = useState("");
+  const [previousContent, setPreviousContent] = useState(""); // Track the last 10 seconds of content
 
   const recognitionRef = useRef(null); // To keep reference to recognition
   const mediaStreamRef = useRef(null); // To hold reference to the audio stream for volume monitoring
@@ -16,10 +17,12 @@ function WorkingPage() {
   const audioContextRef = useRef(null); // For audio context
   const wordCountRef = useRef(0); // To count words
   const startTimeRef = useRef(0); // To store the start time of recording
+  const transcriptBufferRef = useRef(""); // Buffer for the transcript over the last 10 seconds
 
+  // Initialize speech recognition once
   useEffect(() => {
-    // Check if browser supports Web Speech API
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert("Your browser does not support Speech Recognition. Try Chrome or Edge.");
       return;
@@ -36,8 +39,7 @@ function WorkingPage() {
         newTranscript += event.results[i][0].transcript;
       }
       setTranscript(newTranscript);
-
-      // Count words in the transcript
+      transcriptBufferRef.current = newTranscript;
       wordCountRef.current = newTranscript.split(" ").length;
     };
 
@@ -45,8 +47,17 @@ function WorkingPage() {
       console.error("Speech Recognition Error:", event.error);
     };
 
-    recognitionRef.current = recognition; // Save recognition for later use
+    recognitionRef.current = recognition;
   }, []);
+
+  // Function to periodically send last 10 seconds of content to the backend
+  const sendToBackend = () => {
+    if (transcriptBufferRef.current.length > 0) {
+      const content = transcriptBufferRef.current;
+      socket.emit("speech", content, "Your speech summary here");
+      console.log("Sending content to backend:", content);
+    }
+  };
 
   // Start speech recognition
   const startRecording = () => {
@@ -71,31 +82,34 @@ function WorkingPage() {
       setSpeechSpeed(wpm); // Set WPM
 
       // Emit the speech to backend for analysis once listening stops
-      socket.emit("speech", transcript, "Your speech summary here"); // Add summary if needed
+      socket.emit("speech", transcript, "Your speech summary here");
     }
   };
 
   // Volume Monitoring with Web Audio API
   useEffect(() => {
+    let audioContext = null;
+  
     if (isRecording) {
+      // Initialize the audio context and analyser when recording starts
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioContextRef.current = audioContext;
+  
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
+  
       navigator.mediaDevices
         .getUserMedia({ audio: true })
         .then((stream) => {
           mediaStreamRef.current = stream;
-          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          audioContextRef.current = audioContext;
-
-          const analyser = audioContext.createAnalyser();
-          analyser.fftSize = 256;
-          analyserRef.current = analyser;
-
+  
           const source = audioContext.createMediaStreamSource(stream);
           source.connect(analyser);
-
+  
           const bufferLength = analyser.frequencyBinCount;
           const dataArray = new Uint8Array(bufferLength);
-
-          // Continuously monitor the volume level
+  
           const getVolume = () => {
             analyser.getByteFrequencyData(dataArray);
             let sum = 0;
@@ -103,29 +117,45 @@ function WorkingPage() {
               sum += dataArray[i];
             }
             const average = sum / dataArray.length;
-
-            setSpeechVolume(average); // Set the average volume
-
+            setSpeechVolume(average);
+  
             // Continue monitoring every 100ms
             requestAnimationFrame(getVolume);
           };
-
+  
           getVolume();
         })
         .catch((err) => {
           console.error("Error accessing microphone:", err);
         });
     }
-
-    // Cleanup on unmount or stop
+  
+    // Cleanup: Only close the AudioContext if it's not already closed
     return () => {
+      if (audioContext && audioContext.state !== "closed") {
+        audioContext.close().catch((error) => {
+          console.error("Error closing AudioContext:", error);
+        });
+      }
+  
+      // Stop the media stream tracks
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach((track) => track.stop());
       }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
     };
+  }, [isRecording]);
+  
+
+  // Periodically send the last 10 seconds of content to the backend
+  useEffect(() => {
+    if (isRecording) {
+      const intervalId = setInterval(() => {
+        sendToBackend(); // Send content every 5 seconds (or adjust interval as needed)
+      }, 5000); // 5000ms = 5 seconds
+
+      // Cleanup interval when recording stops
+      return () => clearInterval(intervalId);
+    }
   }, [isRecording]);
 
   // Listen for feedback from backend
