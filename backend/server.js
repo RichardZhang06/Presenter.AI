@@ -17,8 +17,9 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
-// Initialize OpenAI
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Hardcode your OpenAI API Key
+// PUT THE API KEY IN HERE!!!
+const openai = new OpenAI({ apiKey: 'PUT KEY HEREREERERE'});
 
 // Function to analyze speech using ChatGPT
 const analyzeSpeech = async (speechText, summaryText) => {
