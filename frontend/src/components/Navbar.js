@@ -9,7 +9,6 @@ const Navbar = () => {
 
                 {/* Navigation Links */}
                 <div className="flex space-x-6">
-                    <Link to="/home" className="hover:text-gray-200 transition">Home</Link>
                     <Link to="/speech" className="hover:text-gray-200 transition">Speech Test</Link>
                     <Link to="/about" className="hover:text-gray-200 transition">About</Link>
                 </div>
