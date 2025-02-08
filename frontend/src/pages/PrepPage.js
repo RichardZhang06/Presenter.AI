@@ -58,7 +58,7 @@ const PrepPage = () => {
       </div>
 
       {/* Button to Proceed to Working Page */}
-      <Button text="Proceed to Working Page" destination="/working" />
+      <Button to="/working" text="Proceed to Working Page" />
     </div>
   );
 };
