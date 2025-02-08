@@ -23,14 +23,14 @@ const openai = new OpenAI({ apiKey: 'keyhere' });
 const userSessions = {}; 
 
 // Function to analyze speech using ChatGPT
-const analyzeSpeech = async (sentence, summaryText) => {
+const analyzeSpeech = async (sentence, summaryText, volume, speed) => {
     try {
         const response = await openai.chat.completions.create({
             model: "gpt-4",
             messages: [
                 { 
                     role: "system", 
-                    content: "You are an expert speech coach. Provide brief, actionable feedback on pacing, filler words, and clarity for the given sentence. Keep your feedback clear, concise, and easy for the presenter to understand quickly (maximum of 10 words per category)." 
+                    content: "You are an expert speech coach. Provide brief, actionable feedback on pacing, filler words, and clarity. Consider the user's speaking speed (WPM) and volume (dB) for personalized advice. Keep feedback under 10 words per category." 
                 },
                 { 
                     role: "user", 
@@ -38,7 +38,15 @@ const analyzeSpeech = async (sentence, summaryText) => {
                 },
                 { 
                     role: "system", 
-                    content: `Summary of the presentation: ${summaryText}` 
+                    content: `User summary: ${summaryText}` 
+                },
+                { 
+                    role: "system", 
+                    content: `User's intended speaking speed: ${speed} words per minute (WPM).` 
+                },
+                { 
+                    role: "system", 
+                    content: `User's intended speaking volume: ${volume} decibels (dB).` 
                 }
             ],
         });        
@@ -93,7 +101,7 @@ io.on('connection', (socket) => {
             session.previousSentences.shift();
         }
 
-        const feedback = await analyzeSpeech(sentence, session.summary);
+        const feedback = await analyzeSpeech(sentence, session.summary, session.volume, session.speed);
 
         if (feedback) {
             socket.emit('feedback', { feedback });
