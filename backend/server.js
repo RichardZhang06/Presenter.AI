@@ -17,10 +17,10 @@ app.use(cors());
 app.use(express.json());
 
 // Initialize OpenAI
-const openai = new OpenAI({ apiKey: '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' });
+const openai = new OpenAI({ apiKey: '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' });
 
 // Initialize userSessions object
-const userSessions = {}; // <-- Add this line
+const userSessions = {}; 
 
 // Function to analyze speech using ChatGPT
 const analyzeSpeech = async (sentence, summaryText) => {
@@ -28,11 +28,20 @@ const analyzeSpeech = async (sentence, summaryText) => {
         const response = await openai.chat.completions.create({
             model: "gpt-4",
             messages: [
-                { role: "system", content: "You are an expert speech coach analyzing pacing, filler words, and clarity." },
-                { role: "user", content: `Analyze this speech: ${sentence}` },
-                { role: "system", content: `Summary: ${summaryText}` }
+                { 
+                    role: "system", 
+                    content: "You are an expert speech coach. Provide brief, actionable feedback on pacing, filler words, and clarity for the given sentence. Keep your feedback clear, concise, and easy for the presenter to understand quickly (maximum of 10 words per category)." 
+                },
+                { 
+                    role: "user", 
+                    content: `Analyze this sentence for pacing, filler words, and clarity: ${sentence}` 
+                },
+                { 
+                    role: "system", 
+                    content: `Summary of the presentation: ${summaryText}` 
+                }
             ],
-        });
+        });        
 
         return response.choices[0].message.content;
     } catch (error) {
@@ -52,21 +61,24 @@ io.on('connection', (socket) => {
         console.log(`Summary received for user ${socket.id}:`, summaryText);
     });
 
-    socket.on('speech', async (speechText, summaryText) => {
+    // Backend (server.js)
+    socket.on('speech', async (sentence, summaryText) => {
         const session = userSessions[socket.id];
-        session.previousSentences.push(speechText);
-    
+        session.previousSentences.push(sentence);
+        
         // Optionally limit to last 5 sentences for context
         if (session.previousSentences.length > 5) {
             session.previousSentences.shift();
         }
-    
-        const feedback = await analyzeSpeech(speechText, summaryText); // Pass speechText and summaryText
-    
+        
+        // Analyze the current sentence
+        const feedback = await analyzeSpeech(sentence, summaryText); // Pass sentence and summaryText
+
         if (feedback) {
             socket.emit('feedback', { feedback });
         }
-    });         
+    });
+            
 
     socket.on('disconnect', () => {
         console.log(`User ${socket.id} disconnected`);
