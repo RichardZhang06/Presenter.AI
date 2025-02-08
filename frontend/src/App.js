@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import PrepPage from "./pages/PrepPage";
 import AboutPage from "./pages/AboutPage";
 import SpeechPage from "./pages/SpeechPage";
+import WorkingPage from "./pages/WorkingPage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -22,6 +23,7 @@ const App = () => {
             <Route path="/prep" element={<PrepPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/speech" element={<SpeechPage />} />
+            <Route path="/working" element={<WorkingPage />} />
           </Routes>
         </div>
 

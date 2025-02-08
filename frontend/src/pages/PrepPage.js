@@ -1,13 +1,16 @@
 // src/pages/PrepPage.js
-import React from "react";
+import React from 'react';
+import Button from '../components/Button';
 
 const PrepPage = () => {
-    return (
-        <div className="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
-            <h1 className="text-3xl font-bold text-gray-800 mt-12">Welcome to the Prep Page</h1>
-            <p className="text-gray-600 mt-4">Get ready to improve your presentation skills!</p>
-        </div>
-    );
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <h2 className="text-4xl font-bold text-gray-800">Welcome to the Prep Page!</h2>
+      <p className="text-lg text-gray-600 mt-4">Get ready to start working on your presentation.</p>
+
+      <Button to="/working" text="Go to Working Page" />
+    </div>
+  );
 };
 
 export default PrepPage;

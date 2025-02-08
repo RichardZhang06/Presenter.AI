@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Button from '../components/Button';
+
 
 const HomePage = () => {
   return (
@@ -14,13 +15,7 @@ const HomePage = () => {
           Get insights on your pacing, clarity, and delivery to become a better speaker!
         </p>
 
-        {/* Call-to-Action Button */}
-        <Link 
-          to="/prep" 
-          className="bg-blue-600 text-white px-6 py-3 mt-6 rounded-lg shadow-md hover:bg-blue-700 transition duration-300"
-        >
-          Get Started
-        </Link>
+        <Button to="/prep" text="Go to Prep Page" />
       </div>
     </div>
   );
