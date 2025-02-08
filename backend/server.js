@@ -54,31 +54,51 @@ const analyzeSpeech = async (sentence, summaryText) => {
 io.on('connection', (socket) => {
     console.log('A user connected');
     
-    userSessions[socket.id] = { summary: "", previousSentences: [] };
+    // Initialize session with default settings
+    userSessions[socket.id] = { 
+        summary: "", 
+        volume: 60,  // Default volume in dB (normal conversation)
+        speed: 150,  // Default speed in WPM (average)
+        previousSentences: [] 
+    };
 
+    // Handle summary input
     socket.on('summary', (summaryText) => {
         userSessions[socket.id].summary = summaryText;
         console.log(`Summary received for user ${socket.id}:`, summaryText);
     });
 
-    // Backend (server.js)
-    socket.on('speech', async (sentence, summaryText) => {
+    // Handle speech settings (volume & speed)
+    socket.on('speechSettings', ({ summary, volume, speed }) => {
+        userSessions[socket.id].summary = summary;
+        userSessions[socket.id].volume = volume;
+        userSessions[socket.id].speed = speed;
+
+        console.log(`Settings received for user ${socket.id}:`, { summary, volume, speed });
+    });
+
+    // Handle speech input for analysis
+    socket.on('speech', async (sentence) => {
         const session = userSessions[socket.id];
+
+        if (!session) {
+            console.log(`No session found for user ${socket.id}`);
+            return;
+        }
+
         session.previousSentences.push(sentence);
         
         // Optionally limit to last 5 sentences for context
         if (session.previousSentences.length > 5) {
             session.previousSentences.shift();
         }
-        
-        // Analyze the current sentence
-        const feedback = await analyzeSpeech(sentence, summaryText); // Pass sentence and summaryText
+
+        const feedback = await analyzeSpeech(sentence, session.summary);
 
         if (feedback) {
             socket.emit('feedback', { feedback });
         }
     });
-            
 
     socket.on('disconnect', () => {
         console.log(`User ${socket.id} disconnected`);
