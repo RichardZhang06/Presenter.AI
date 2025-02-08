@@ -3,7 +3,6 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const { OpenAI } = require('openai');
-require('dotenv').config(); // Load API Key securely
 
 const app = express();
 const server = http.createServer(app);
@@ -17,27 +16,25 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ apiKey: 'paste-API-key-here' });
 
-// Function to analyze speech using OpenAI's streaming API
-const analyzeSpeech = async (speechText, summaryText, socket) => {
+// Optimized function to analyze speech
+const analyzeSpeech = async (speechText, summaryText) => {
     try {
-        const stream = await openai.chat.completions.create({
+        const response = await openai.chat.completions.create({
             model: "gpt-4",
+            temperature: 0.3,  // More concise and deterministic output
+            max_tokens: 200,  // Prevent overly long responses
             messages: [
-                { role: "system", content: "You are an expert speech coach analyzing pacing, filler words, and clarity." },
-                { role: "user", content: `Analyze this speech and provide feedback on pacing, filler words, and clarity. The presentation summary is as follows: "${summaryText}". The speech is: "${speechText}"` }
+                { role: "system", content: "You are a speech coach analyzing pacing, filler words, and clarity. Give clear and direct feedback." },
+                { role: "user", content: `Analyze this speech for pacing, filler words, and clarity. The presentation summary is: "${summaryText}". The speech is: "${speechText}"` }
             ],
-            stream: true, // Enable streaming for faster feedback
         });
 
-        // Send data to the client in chunks
-        for await (const part of stream) {
-            socket.emit('feedback', { feedback: part.choices[0]?.delta?.content || '' });
-        }
+        return response.choices[0]?.message?.content || "No feedback available.";
     } catch (error) {
-        console.error("Error analyzing speech:", error.message);
-        socket.emit('feedback', { feedback: "Error analyzing speech." });
+        console.error("OpenAI API Error:", error.response?.data || error.message);
+        return "Error analyzing speech. Please try again.";
     }
 };
 
@@ -45,13 +42,11 @@ const analyzeSpeech = async (speechText, summaryText, socket) => {
 io.on('connection', (socket) => {
     console.log('A user connected');
 
-    socket.on('speech', async (data) => {
+    socket.on('speech', async (data, callback) => {
         const { text: speechText, summary: summaryText } = data;
-        if (!speechText || !summaryText) {
-            socket.emit('feedback', { feedback: "Invalid input: Speech and summary required." });
-            return;
-        }
-        analyzeSpeech(speechText, summaryText, socket);
+        const feedback = await analyzeSpeech(speechText, summaryText);
+        callback?.(feedback);  // Use callback for better performance
+        socket.emit('feedback', { feedback });
     });
 
     socket.on('disconnect', () => {
@@ -60,6 +55,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
