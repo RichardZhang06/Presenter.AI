@@ -15,7 +15,7 @@ const HomePage = () => {
           Get insights on your pacing, clarity, and delivery to become a better speaker!
         </p>
 
-        <Button to="/prep" text="Go to Prep Page" />
+        <Button to="/prep" text="Begin" />
       </div>
     </div>
   );
