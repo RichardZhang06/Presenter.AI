@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import PrepPage from "./pages/PrepPage";
 import AboutPage from "./pages/AboutPage";
-import SpeechPage from "./pages/SpeechPage";
+import MicTest from "./pages/MicTest";
 import WorkingPage from "./pages/WorkingPage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -28,7 +28,7 @@ const App = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/prep" element={<PrepPage />} />
             <Route path="/about" element={<AboutPage />} />
-            <Route path="/speech" element={<SpeechPage />} />
+            <Route path="/mic" element={<MicTest />} />
             <Route path="/working" element={<WorkingPage />} />
           </Routes>
         </div>

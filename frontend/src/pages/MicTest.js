@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 
-function Speech() {
+function MicTest() {
     const [transcript, setTranscript] = useState("");
     const [isListening, setIsListening] = useState(false);
     const recognitionRef = useRef(null); // To keep reference to recognition
@@ -72,4 +72,4 @@ function Speech() {
     );
 }
 
-export default Speech;
+export default MicTest;
