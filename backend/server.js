@@ -44,20 +44,37 @@ const analyzeSpeech = async (speechText, summaryText, socket) => {
 // Handle WebSocket connections
 io.on('connection', (socket) => {
     console.log('A user connected');
+    
+    userSessions[socket.id] = { summary: "", previousSentences: [] };
 
-    socket.on('speech', async (data) => {
-        const { text: speechText, summary: summaryText } = data;
-        if (!speechText || !summaryText) {
-            socket.emit('feedback', { feedback: "Invalid input: Speech and summary required." });
-            return;
+    socket.on('summary', (summaryText) => {
+        userSessions[socket.id].summary = summaryText;
+        console.log(`Summary received for user ${socket.id}:`, summaryText);
+    });
+
+    socket.on('speech', async (sentence) => {
+        const session = userSessions[socket.id];
+        const summaryText = session.summary || "No summary provided.";
+        session.previousSentences.push(sentence);
+
+        // Optionally limit to last 5 sentences for context
+        if (session.previousSentences.length > 5) {
+            session.previousSentences.shift();
         }
-        analyzeSpeech(speechText, summaryText, socket);
+
+        const feedback = await analyzeSpeechSentence(sentence, summaryText, session.previousSentences);
+        
+        if (feedback) {
+            socket.emit('feedback', { feedback });
+        }
     });
 
     socket.on('disconnect', () => {
-        console.log('A user disconnected');
+        console.log(`User ${socket.id} disconnected`);
+        delete userSessions[socket.id];
     });
 });
+
 
 const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
