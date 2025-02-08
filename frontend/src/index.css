@@ -9,4 +9,15 @@ body {
   padding: 0;
 }
 
+.fixed-size-box {
+  height: 200px; /* Adjust height of the box */
+  width: 100%; /* Full width */
+  max-width: 100%; /* Ensure it doesn't exceed container's width */
+  overflow-y: auto; /* Scroll if content exceeds */
+  white-space: normal; /* Allow text to wrap naturally */
+  font-size: 0.875rem; /* Make text smaller */
+  line-height: 1.5; /* Increase line height for readability */
+}
+
+
 
