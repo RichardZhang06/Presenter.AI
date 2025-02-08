@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.io Test</title>
+</head>
+<body>
+    <h2>Test Speech Analysis</h2>
+    
+    <label for="summaryInput">Enter Presentation Summary:</label><br>
+    <textarea id="summaryInput" rows="4" cols="50" placeholder="Enter your presentation summary here..."></textarea><br><br>
+
+    <label for="speechInput">Enter Speech:</label><br>
+    <textarea id="speechInput" rows="10" cols="50" placeholder="Enter speech text here..."></textarea><br><br>
+
+    <button id="sendBtn">Send Speech and Summary</button>
+    
+    <p><strong>Feedback:</strong></p>
+    <pre id="feedback"></pre>
+
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        const socket = io('http://localhost:5001'); // Connect to your server
+
+        document.getElementById('sendBtn').addEventListener('click', () => {
+            const speechText = document.getElementById('speechInput').value;
+            const summaryText = document.getElementById('summaryInput').value;
+            if (speechText.trim() && summaryText.trim()) {
+                // Send speech and summary to the server
+                socket.emit('speech', { text: speechText, summary: summaryText });
+            } else {
+                alert("Please enter both a speech and a summary.");
+            }
+        });
+
+        // Listen for feedback from the server
+        socket.on('feedback', (data) => {
+            document.getElementById('feedback').textContent = data.feedback;
+        });
+    </script>
+</body>
+</html>

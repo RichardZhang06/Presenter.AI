@@ -1,39 +1,62 @@
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-const cors = require("cors");
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
+const cors = require('cors');
+const { OpenAI } = require('openai');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
+const io = socketIo(server, {
     cors: {
-        origin: "http://localhost:3000",
-        methods: ["GET", "POST"]
+        origin: '*',
+        methods: ['GET', 'POST']
     }
 });
 
 app.use(cors());
 app.use(express.json());
 
-// WebSocket connection
-io.on("connection", (socket) => {
-    console.log("A user connected:", socket.id);
+// Hardcode your OpenAI API Key
+const openai = new OpenAI({ apiKey: 'your-hardcoded-api-key-here' });
 
-    socket.on("audio-data", (data) => {
-        console.log("Received audio data:", data);
+// Function to analyze speech using ChatGPT
+const analyzeSpeech = async (speechText, summaryText) => {
+    try {
+        const response = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+                { role: "system", content: "You are an expert speech coach analyzing pacing, filler words, and clarity." },
+                { role: "user", content: `Analyze this speech and provide feedback on pacing, filler words, and clarity. The presentation summary is as follows: "${summaryText}". The speech is: "${speechText}"` }
+            ],
+        });
 
-        // Process audio with AI (placeholder)
-        const feedback = { message: "Slow down your speech" };
+        // Log the full GPT response to the console
+        console.log('GPT Response:', response);
 
-        // Send feedback back to frontend
-        socket.emit("ai-feedback", feedback);
+        // Return the analysis feedback
+        return response.choices[0].message.content;
+    } catch (error) {
+        console.error("Error analyzing speech:", error);
+        return "Error analyzing speech.";
+    }
+};
+
+// Handle WebSocket connections
+io.on('connection', (socket) => {
+    console.log('A user connected');
+
+    socket.on('speech', async (data) => {
+        const { text: speechText, summary: summaryText } = data;
+        const feedback = await analyzeSpeech(speechText, summaryText);
+        socket.emit('feedback', { feedback });
     });
 
-    socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
+    socket.on('disconnect', () => {
+        console.log('A user disconnected');
     });
 });
 
-const PORT = 5000;
-server.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
-
+const PORT = process.env.PORT || 5001;
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
