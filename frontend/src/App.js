@@ -4,12 +4,12 @@ import HomePage from "./pages/HomePage";
 import LandingPage from "./pages/LandingPage";
 import AboutPage from "./pages/AboutPage";
 import Speech from "./pages/SpeechTest";
-import Navbar from "./components/Navbar"; // ✅ Import Navbar
+import Navbar from "./components/Navbar";
 
 const App = () => {
     return (
         <Router>
-            {/* ✅ Use Navbar Component Here */}
+            {/* Navigation */}
             <Navbar />
 
             {/* Page Content */}
