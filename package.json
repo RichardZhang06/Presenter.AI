@@ -1,0 +1,25 @@
+{
+  "name": "presenter.ai",
+  "version": "1.0.0",
+  "description": "npm init -y npm install express socket.io cors node server.js Should see \"Backend running on http://localhost:5000\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RichardZhang06/Presenter.AI.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RichardZhang06/Presenter.AI/issues"
+  },
+  "homepage": "https://github.com/RichardZhang06/Presenter.AI#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  }
+}
