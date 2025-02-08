@@ -9,20 +9,29 @@ const App = () => {
     return (
         <Router>
             {/* Navigation Bar */}
-            <nav className="bg-blue-500 p-4 text-white flex justify-center space-x-6">
-                <Link to="/" className="px-4 py-2 rounded hover:bg-blue-700 transition">Landing Page</Link>
-                <Link to="/home" className="px-4 py-2 rounded hover:bg-blue-700 transition">Home Page</Link>
-                <Link to="/speech" className="px-4 py-2 rounded hover:bg-blue-700 transition">Speech Test</Link>
-                <Link to="/about" className="px-4 py-2 rounded hover:bg-blue-700 transition">About</Link>
+            <nav className="bg-blue-600 text-white shadow-md">
+                <div className="container mx-auto flex justify-between items-center p-4">
+                    {/* Logo */}
+                    <Link to="/" className="text-2xl font-bold tracking-wide">Presenter.AI</Link>
+
+                    {/* Navigation Links */}
+                    <div className="flex space-x-6">
+                        <Link to="/home" className="hover:text-gray-200 transition">Home</Link>
+                        <Link to="/speech" className="hover:text-gray-200 transition">Speech Test</Link>
+                        <Link to="/about" className="hover:text-gray-200 transition">About</Link>
+                    </div>
+                </div>
             </nav>
 
-            {/* Routes */}
-            <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/home" element={<HomePage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/speech" element={<Speech />} />
-            </Routes>
+            {/* Page Content */}
+            <div className="container mx-auto p-6">
+                <Routes>
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/home" element={<HomePage />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/speech" element={<Speech />} />
+                </Routes>
+            </div>
         </Router>
     );
 };
