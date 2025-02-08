@@ -6,11 +6,16 @@ const socket = io("http://localhost:5001");
 function WorkingPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [chunks, setChunks] = useState([]);
+  const [speechSpeed, setSpeechSpeed] = useState(0); // Words per minute
+  const [speechVolume, setSpeechVolume] = useState(0); // Volume level (in decibels)
   const [feedback, setFeedback] = useState("");
 
   const recognitionRef = useRef(null); // To keep reference to recognition
+  const mediaStreamRef = useRef(null); // To hold reference to the audio stream for volume monitoring
+  const analyserRef = useRef(null); // For audio analyser node
+  const audioContextRef = useRef(null); // For audio context
+  const wordCountRef = useRef(0); // To count words
+  const startTimeRef = useRef(0); // To store the start time of recording
 
   useEffect(() => {
     // Check if browser supports Web Speech API
@@ -31,6 +36,9 @@ function WorkingPage() {
         newTranscript += event.results[i][0].transcript;
       }
       setTranscript(newTranscript);
+
+      // Count words in the transcript
+      wordCountRef.current = newTranscript.split(" ").length;
     };
 
     recognition.onerror = (event) => {
@@ -45,6 +53,7 @@ function WorkingPage() {
     if (recognitionRef.current && !isRecording) {
       recognitionRef.current.start();
       setIsRecording(true);
+      startTimeRef.current = Date.now(); // Store the start time when recording starts
     }
   };
 
@@ -54,10 +63,70 @@ function WorkingPage() {
       recognitionRef.current.stop();
       setIsRecording(false);
 
+      // Calculate Words Per Minute (WPM) once recording stops
+      const durationInMinutes = (Date.now() - startTimeRef.current) / 60000; // Duration in minutes
+      const totalWords = wordCountRef.current;
+
+      const wpm = totalWords / durationInMinutes; // Calculate WPM (words per minute)
+      setSpeechSpeed(wpm); // Set WPM
+
       // Emit the speech to backend for analysis once listening stops
       socket.emit("speech", transcript, "Your speech summary here"); // Add summary if needed
     }
   };
+
+  // Volume Monitoring with Web Audio API
+  useEffect(() => {
+    if (isRecording) {
+      navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then((stream) => {
+          mediaStreamRef.current = stream;
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          audioContextRef.current = audioContext;
+
+          const analyser = audioContext.createAnalyser();
+          analyser.fftSize = 256;
+          analyserRef.current = analyser;
+
+          const source = audioContext.createMediaStreamSource(stream);
+          source.connect(analyser);
+
+          const bufferLength = analyser.frequencyBinCount;
+          const dataArray = new Uint8Array(bufferLength);
+
+          // Continuously monitor the volume level
+          const getVolume = () => {
+            analyser.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+              sum += dataArray[i];
+            }
+            const average = sum / dataArray.length;
+
+            setSpeechVolume(average); // Set the average volume
+
+            // Continue monitoring every 100ms
+            requestAnimationFrame(getVolume);
+          };
+
+          getVolume();
+        })
+        .catch((err) => {
+          console.error("Error accessing microphone:", err);
+        });
+    }
+
+    // Cleanup on unmount or stop
+    return () => {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
+  }, [isRecording]);
 
   // Listen for feedback from backend
   useEffect(() => {
@@ -89,6 +158,20 @@ function WorkingPage() {
         <div className="mb-4">
           <p className="text-lg bg-gray-100 p-4 rounded shadow">
             {transcript || "Your speech will appear here..."}
+          </p>
+        </div>
+
+        {/* Speech Speed */}
+        <div className="mb-4">
+          <p className="text-lg bg-gray-100 p-4 rounded shadow">
+            Speech Speed: {Math.round(speechSpeed)} words per minute
+          </p>
+        </div>
+
+        {/* Speech Volume */}
+        <div className="mb-4">
+          <p className="text-lg bg-gray-100 p-4 rounded shadow">
+            Speech Volume: {Math.round(speechVolume)} dB
           </p>
         </div>
 
