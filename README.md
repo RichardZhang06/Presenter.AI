@@ -8,12 +8,19 @@ npm install socket.io-client
 npm install react react-dom
 
 Version Control:
-1. Work on your own local branch.
-git checkout -b (NAME)
-2. Push branch to GitHub (remote repo)
-git push origin (NAME)
-3. Keep your local branch updated.
+1. Work on your own branch.
+
+2. When ready to push local changes, first sync with main to avoid conflicts.
 git checkout main
 git pull origin main
-git checkout (NAME)
+git checkout (BRANCHNAME)
 git merge main
+
+3. Then, push your branch onto GitHub (different than pushing directly to main since pull requests need to be approved first).
+git push origin (BRANCHNAME)
+
+4. Submit it a pull request on GitHub.
+
+5. Once approved by someone else, merge it into main.
+
+If you need help, ask Father Samuel.
