@@ -1,54 +1,80 @@
-// src/pages/WorkingPage.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:5001");
 
 function WorkingPage() {
   const [isRecording, setIsRecording] = useState(false);
-  const [audioURL, setAudioURL] = useState(null);
-  const [audioBlob, setAudioBlob] = useState(null);
-  const [text, setText] = useState(""); // Optional text input
+  const [transcript, setTranscript] = useState("");
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [chunks, setChunks] = useState([]);
+  const [feedback, setFeedback] = useState("");
 
-  // Start recording function
-  const startRecording = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const recorder = new MediaRecorder(stream);
-
-    recorder.ondataavailable = (e) => {
-      setChunks((prevChunks) => [...prevChunks, e.data]);
-    };
-
-    recorder.onstop = () => {
-      const blob = new Blob(chunks, { type: "audio/wav" });
-      const url = URL.createObjectURL(blob);
-      setAudioBlob(blob);
-      setAudioURL(url);
-    };
-
-    recorder.start();
-    setIsRecording(true);
-    setMediaRecorder(recorder);
-  };
-
-  // Stop recording function
-  const stopRecording = () => {
-    mediaRecorder.stop();
-    setIsRecording(false);
-  };
+  const recognitionRef = useRef(null); // To keep reference to recognition
 
   useEffect(() => {
-    return () => {
-      if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        mediaRecorder.stop();
+    // Check if browser supports Web Speech API
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Your browser does not support Speech Recognition. Try Chrome or Edge.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event) => {
+      let newTranscript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        newTranscript += event.results[i][0].transcript;
       }
+      setTranscript(newTranscript);
     };
-  }, [mediaRecorder]);
+
+    recognition.onerror = (event) => {
+      console.error("Speech Recognition Error:", event.error);
+    };
+
+    recognitionRef.current = recognition; // Save recognition for later use
+  }, []);
+
+  // Start speech recognition
+  const startRecording = () => {
+    if (recognitionRef.current && !isRecording) {
+      recognitionRef.current.start();
+      setIsRecording(true);
+    }
+  };
+
+  // Stop speech recognition and send to the backend
+  const stopRecording = () => {
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+
+      // Emit the speech to backend for analysis once listening stops
+      socket.emit("speech", transcript, "Your speech summary here"); // Add summary if needed
+    }
+  };
+
+  // Listen for feedback from backend
+  useEffect(() => {
+    socket.on("feedback", (data) => {
+      setFeedback(data.feedback);
+    });
+    
+    return () => {
+      socket.off("feedback");
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
-        <h2 className="text-2xl font-bold text-center mb-4">Audio Recorder</h2>
-        
+        <h2 className="text-2xl font-bold text-center mb-4">Audio and Speech Recognition</h2>
+
         {/* Record/Stop Button */}
         <div className="mb-4">
           <button
@@ -59,28 +85,21 @@ function WorkingPage() {
           </button>
         </div>
 
-        {/* Audio Playback */}
-        {audioURL && (
-          <div className="mb-4">
-            <audio controls src={audioURL} className="w-full"></audio>
-          </div>
-        )}
-
-        {/* Text Area for Additional Input */}
+        {/* Transcript */}
         <div className="mb-4">
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Enter some text..."
-            className="w-full p-2 border rounded-md"
-          />
+          <p className="text-lg bg-gray-100 p-4 rounded shadow">
+            {transcript || "Your speech will appear here..."}
+          </p>
         </div>
 
-        {/* Feedback Button (if any backend integration is required) */}
-        <div className="mt-6">
-          <button className="bg-green-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-green-700 transition duration-300">
-            Get Feedback
-          </button>
+        {/* Feedback */}
+        <div className="mt-4">
+          {feedback && (
+            <div className="bg-green-100 p-4 rounded-lg">
+              <h3 className="font-bold">Feedback:</h3>
+              <p>{feedback}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
