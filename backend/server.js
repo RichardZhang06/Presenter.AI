@@ -16,36 +16,28 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
-// Hardcode the OpenAI API Key directly in the code
-const openai = new OpenAI({ apiKey: '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' });  // Replace with your actual API key
+// Initialize OpenAI
+const openai = new OpenAI({ apiKey: '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' });
 
-let userSessions = {}; // Initialize userSessions object
+// Initialize userSessions object
+const userSessions = {}; // <-- Add this line
 
-// Function to analyze speech using OpenAI's streaming API
-const analyzeSpeech = async (speechText, summaryText, socket) => {
+// Function to analyze speech using ChatGPT
+const analyzeSpeech = async (sentence, summaryText) => {
     try {
-        const stream = await openai.chat.completions.create({
+        const response = await openai.chat.completions.create({
             model: "gpt-4",
             messages: [
                 { role: "system", content: "You are an expert speech coach analyzing pacing, filler words, and clarity." },
-                { role: "user", content: `Analyze this speech and provide feedback on pacing, filler words, and clarity. The presentation summary is as follows: "${summaryText}". The speech is: "${speechText}"` }
+                { role: "user", content: `Analyze this speech: ${sentence}` },
+                { role: "system", content: `Summary: ${summaryText}` }
             ],
-            stream: true, // Enable streaming for faster feedback
         });
 
-        // Send data to the client in chunks
-        for await (const part of stream) {
-            if (socket && socket.emit) {
-                socket.emit('feedback', { feedback: part.choices[0]?.delta?.content || '' });
-            } else {
-                console.error('socket.emit is not a function, check socket object');
-            }
-        }
+        return response.choices[0].message.content;
     } catch (error) {
-        console.error("Error analyzing speech:", error.message);
-        if (socket && socket.emit) {
-            socket.emit('feedback', { feedback: "Error analyzing speech." });
-        }
+        console.error("Error analyzing speech:", error);
+        return "Error analyzing speech.";
     }
 };
 
@@ -60,22 +52,21 @@ io.on('connection', (socket) => {
         console.log(`Summary received for user ${socket.id}:`, summaryText);
     });
 
-    socket.on('speech', async (sentence) => {
+    socket.on('speech', async (speechText, summaryText) => {
         const session = userSessions[socket.id];
-        const summaryText = session.summary || "No summary provided.";
-        session.previousSentences.push(sentence);
-
+        session.previousSentences.push(speechText);
+    
         // Optionally limit to last 5 sentences for context
         if (session.previousSentences.length > 5) {
             session.previousSentences.shift();
         }
-
-        const feedback = await analyzeSpeech(sentence, summaryText, socket);  // Pass the socket object here
-        
+    
+        const feedback = await analyzeSpeech(speechText, summaryText); // Pass speechText and summaryText
+    
         if (feedback) {
             socket.emit('feedback', { feedback });
         }
-    });
+    });         
 
     socket.on('disconnect', () => {
         console.log(`User ${socket.id} disconnected`);

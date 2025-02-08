@@ -27,8 +27,8 @@
             const speechText = document.getElementById('speechInput').value;
             const summaryText = document.getElementById('summaryInput').value;
             if (speechText.trim() && summaryText.trim()) {
-                // Send speech and summary to the server
-                socket.emit('speech', { text: speechText, summary: summaryText });
+                // Send speech and summary separately
+                socket.emit('speech', speechText, summaryText);
             } else {
                 alert("Please enter both a speech and a summary.");
             }
