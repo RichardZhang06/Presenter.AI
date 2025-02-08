@@ -1,4 +1,3 @@
-// src/pages/PrepPage.js
 import React, { useState } from "react";
 import Button from "../components/Button";
 import { io } from "socket.io-client";
@@ -7,25 +6,25 @@ const socket = io("http://localhost:5001");
 
 const PrepPage = () => {
   const [summary, setSummary] = useState("");
-  const [volume, setVolume] = useState(50); // Default volume: 50%
-  const [speed, setSpeed] = useState(1);    // Default speed: 1 (normal speed)
+  const [volume, setVolume] = useState(60); // Default: 60dB (normal conversation)
+  const [speed, setSpeed] = useState(150); // Default: 150 WPM (average speaking rate)
 
   const handleSummaryChange = (e) => {
     setSummary(e.target.value);
   };
 
   const handleVolumeChange = (e) => {
-    setVolume(e.target.value);
+    setVolume(parseInt(e.target.value));
   };
 
   const handleSpeedChange = (e) => {
-    setSpeed(e.target.value);
+    setSpeed(parseInt(e.target.value));
   };
 
-  // This handler emits the summary to the backend
+  // Emit summary, volume, and speed settings to the backend
   const handleButtonClick = () => {
-    socket.emit("summary", summary);
-    console.log("Summary sent to server:", summary);
+    socket.emit("speechSettings", { summary, volume, speed });
+    console.log("Settings sent to server:", { summary, volume, speed });
   };
 
   return (
@@ -40,34 +39,45 @@ const PrepPage = () => {
         onChange={handleSummaryChange}
       />
 
-      {/* Volume Slider */}
-      <div className="mb-4">
-        <label className="text-lg text-gray-700">Volume: {volume}%</label>
+      {/* Volume Slider (in Decibels) */}
+      <div className="mb-4 w-full max-w-xl">
+        <label className="text-lg text-gray-700">Volume: {volume} dB</label>
         <input
           type="range"
-          min="0"
-          max="100"
+          min="30"
+          max="90"
+          step="1"
           value={volume}
           onChange={handleVolumeChange}
-          className="w-full"
+          className="w-full cursor-pointer"
         />
+        <div className="flex justify-between text-sm text-gray-500">
+          <span>30dB (Whisper)</span>
+          <span>60dB (Conversation)</span>
+          <span>90dB (Shouting)</span>
+        </div>
       </div>
 
-      {/* Speed Slider */}
-      <div className="mb-6">
-        <label className="text-lg text-gray-700">Speed: {speed}x</label>
+      {/* Speed Slider (Words Per Minute) */}
+      <div className="mb-6 w-full max-w-xl">
+        <label className="text-lg text-gray-700">Speed: {speed} WPM</label>
         <input
           type="range"
-          min="0.5"
-          max="2"
-          step="0.1"
+          min="100"
+          max="200"
+          step="5"
           value={speed}
           onChange={handleSpeedChange}
-          className="w-full"
+          className="w-full cursor-pointer"
         />
+        <div className="flex justify-between text-sm text-gray-500">
+          <span>100 WPM (Slow)</span>
+          <span>150 WPM (Average)</span>
+          <span>200 WPM (Fast)</span>
+        </div>
       </div>
 
-      {/* Button to Proceed to Working Page; onClick emits summary */}
+      {/* Proceed Button */}
       <Button to="/working" text="Proceed to Working Page" onClick={handleButtonClick} />
     </div>
   );
