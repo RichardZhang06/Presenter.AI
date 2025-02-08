@@ -17,8 +17,7 @@ app.use(cors());
 app.use(express.json());
 
 // Hardcode your OpenAI API Key
-// PUT THE API KEY IN HERE!!!
-const openai = new OpenAI({ apiKey: 'PUT KEY HEREREERERE'});
+const openai = new OpenAI({ apiKey: 'your-hardcoded-api-key-here' });
 
 // Function to analyze speech using ChatGPT
 const analyzeSpeech = async (speechText, summaryText) => {
