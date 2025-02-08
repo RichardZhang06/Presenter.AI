@@ -3,7 +3,6 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const { OpenAI } = require('openai');
-require('dotenv').config(); // Load API Key from .env
 
 const app = express();
 const server = http.createServer(app);
