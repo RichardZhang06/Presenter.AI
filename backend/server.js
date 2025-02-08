@@ -17,7 +17,7 @@ app.use(cors());
 app.use(express.json());
 
 // Initialize OpenAI
-const openai = new OpenAI({ apiKey: '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' });
+const openai = new OpenAI({ apiKey: 'keyhere' });
 
 // Initialize userSessions object
 const userSessions = {}; 
