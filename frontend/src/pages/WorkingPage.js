@@ -1,10 +1,11 @@
+// src/pages/WorkingPage.js
 import React, { useState, useEffect } from "react";
 
 function WorkingPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState(null);
   const [audioBlob, setAudioBlob] = useState(null);
-  const [text, setText] = useState(""); // Optional field for additional text input
+  const [text, setText] = useState(""); // Optional text input
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [chunks, setChunks] = useState([]);
 

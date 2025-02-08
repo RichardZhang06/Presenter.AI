@@ -1,10 +1,14 @@
+// src/pages/PrepPage.js
 import React, { useState } from "react";
 import Button from "../components/Button";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:5001");
 
 const PrepPage = () => {
   const [summary, setSummary] = useState("");
   const [volume, setVolume] = useState(50); // Default volume: 50%
-  const [speed, setSpeed] = useState(1); // Default speed: 1 (normal speed)
+  const [speed, setSpeed] = useState(1);    // Default speed: 1 (normal speed)
 
   const handleSummaryChange = (e) => {
     setSummary(e.target.value);
@@ -16,6 +20,12 @@ const PrepPage = () => {
 
   const handleSpeedChange = (e) => {
     setSpeed(e.target.value);
+  };
+
+  // This handler emits the summary to the backend
+  const handleButtonClick = () => {
+    socket.emit("summary", summary);
+    console.log("Summary sent to server:", summary);
   };
 
   return (
@@ -57,8 +67,8 @@ const PrepPage = () => {
         />
       </div>
 
-      {/* Button to Proceed to Working Page */}
-      <Button to="/working" text="Proceed to Working Page" />
+      {/* Button to Proceed to Working Page; onClick emits summary */}
+      <Button to="/working" text="Proceed to Working Page" onClick={handleButtonClick} />
     </div>
   );
 };
