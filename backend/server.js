@@ -3,7 +3,6 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const { OpenAI } = require('openai');
-require('dotenv').config(); // Load API Key securely
 
 const app = express();
 const server = http.createServer(app);
@@ -17,7 +16,10 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Hardcode the OpenAI API Key directly in the code
+const openai = new OpenAI({ apiKey: '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' });  // Replace with your actual API key
+
+let userSessions = {}; // Initialize userSessions object
 
 // Function to analyze speech using OpenAI's streaming API
 const analyzeSpeech = async (speechText, summaryText, socket) => {
@@ -33,11 +35,17 @@ const analyzeSpeech = async (speechText, summaryText, socket) => {
 
         // Send data to the client in chunks
         for await (const part of stream) {
-            socket.emit('feedback', { feedback: part.choices[0]?.delta?.content || '' });
+            if (socket && socket.emit) {
+                socket.emit('feedback', { feedback: part.choices[0]?.delta?.content || '' });
+            } else {
+                console.error('socket.emit is not a function, check socket object');
+            }
         }
     } catch (error) {
         console.error("Error analyzing speech:", error.message);
-        socket.emit('feedback', { feedback: "Error analyzing speech." });
+        if (socket && socket.emit) {
+            socket.emit('feedback', { feedback: "Error analyzing speech." });
+        }
     }
 };
 
@@ -62,7 +70,7 @@ io.on('connection', (socket) => {
             session.previousSentences.shift();
         }
 
-        const feedback = await analyzeSpeechSentence(sentence, summaryText, session.previousSentences);
+        const feedback = await analyzeSpeech(sentence, summaryText, socket);  // Pass the socket object here
         
         if (feedback) {
             socket.emit('feedback', { feedback });
@@ -74,7 +82,6 @@ io.on('connection', (socket) => {
         delete userSessions[socket.id];
     });
 });
-
 
 const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
