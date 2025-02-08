@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@tailwindcss/postcss": "^4.0.4",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "react": "^19.0.0",
@@ -33,10 +34,13 @@
       "last 1 safari version"
     ]
   },
+  "description": "",
   "devDependencies": {
     "autoprefixer": "^10.4.20",
+    "css-loader": "^7.1.2",
     "postcss": "^8.5.1",
+    "postcss-loader": "^8.1.1",
+    "source-map-loader": "^5.0.0",
     "tailwindcss": "^4.0.4"
-  },
-  "description": ""
+  }
 }
