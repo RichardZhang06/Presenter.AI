@@ -13,7 +13,9 @@ const App = () => {
                     <Link to="/" className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-700">Landing Page</Link>
                 </div>
                 <Link to="/home" className="hover:underline">Home Page</Link>
-                <Link to="/Speech" className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-700">Speech Test</Link>
+                <div className="flex items-center justify-center min-h-screen">
+                    <Link to="/Speech" className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-700">Speech Test</Link>
+                </div>
             </nav>
 
             {/* Routes */}
