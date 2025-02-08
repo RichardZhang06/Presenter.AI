@@ -7,17 +7,23 @@ import SpeechPage from "./pages/SpeechPage";
 import WorkingPage from "./pages/WorkingPage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import AnimatedWaves from "./components/AnimatedWaves";
+
+
 
 const App = () => {
   return (
     <Router>
       <div className="flex flex-col min-h-screen">
 
+        {/* Water Waves Background */}
+        <AnimatedWaves />
+
         {/* Navigation */}
         <Navbar />
 
         {/* Page Content */}
-        <div className="container mx-auto p-6 flex-grow">
+        <div className="container mx-auto p-6 flex-grow relative bg-blue-100 rounded-lg shadow-lg">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/prep" element={<PrepPage />} />
