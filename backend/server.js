@@ -17,7 +17,7 @@ app.use(cors());
 app.use(express.json());
 
 // Initialize OpenAI
-const openai = new OpenAI({ apiKey: 'keyhere' });
+const openai = new OpenAI({ apiKey: 'Key-Goes-Here' });
 
 // Initialize userSessions object
 const userSessions = {}; 
